@@ -16,6 +16,7 @@
         <nav class="footer__nav">
           <NuxtLink to="/products">Shop</NuxtLink>
           <NuxtLink to="/profile">Profile</NuxtLink>
+          <NuxtLink to="/cart">Cart</NuxtLink>
         </nav>
         <p class="footer__copy">© 2025 Craftly. Handmade with ♥</p>
       </div>

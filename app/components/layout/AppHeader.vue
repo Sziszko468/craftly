@@ -1,8 +1,7 @@
 <script setup lang="ts">
-
+import { ref, onMounted } from 'vue'
 import { useCart } from '~/composables/useCart'
 import { useLocale } from '~/composables/useLocale'
-import { ref, onMounted } from 'vue'
 
 const { cart } = useCart()
 const { locale, setLocale } = useLocale()
@@ -11,9 +10,9 @@ const isMenuOpen = ref(false)
 const isScrolled = ref(false)
 
 const navLinks = [
-  { label: { en: 'Shop', nl: 'Winkel' },      to: '/products' },
-  { label: { en: 'Creators', nl: 'Makers' },  to: '/creators' },
-  { label: { en: 'Profile', nl: 'Profiel' },  to: '/profile'  },
+  { label: { en: 'Shop',    nl: 'Winkel'      }, to: '/products' },
+  { label: { en: 'Profile', nl: 'Profiel'     }, to: '/profile'  },
+  { label: { en: 'Login',   nl: 'Inloggen'    }, to: '/auth'     },
 ]
 
 onMounted(() => {
@@ -68,7 +67,7 @@ onMounted(() => {
           </button>
         </div>
 
-        <!-- Cart -->
+        <!-- Cart icon -->
         <NuxtLink to="/cart" class="cart-btn" aria-label="Cart">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
@@ -80,7 +79,7 @@ onMounted(() => {
           </span>
         </NuxtLink>
 
-        <!-- Mobile menu -->
+        <!-- Mobile menu button -->
         <button
           class="menu-btn"
           :aria-expanded="isMenuOpen"
@@ -220,13 +219,8 @@ onMounted(() => {
   transition: color $duration-fast;
   padding: 2px $space-1;
 
-  &--active {
-    color: $color-blue;
-  }
-
-  &:hover:not(&--active) {
-    color: $color-text-muted;
-  }
+  &--active { color: $color-blue; }
+  &:hover:not(&--active) { color: $color-text-muted; }
 }
 
 .lang-sep {
@@ -266,6 +260,7 @@ onMounted(() => {
     align-items: center;
     justify-content: center;
     padding: 0 $space-1;
+    animation: fade-in $duration-base $ease-out;
   }
 }
 

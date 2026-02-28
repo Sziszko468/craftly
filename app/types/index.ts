@@ -102,3 +102,27 @@ export interface ToastMessage {
   message: string
   duration?: number
 }
+
+// Product upload form
+export interface ProductUploadForm {
+  title: string
+  description: string
+  price: number | null
+  category: string
+  condition: ProductCondition | null
+  stock: number | null
+  tags: string
+  images: File[]
+}
+
+// User profile
+export interface UserProfile {
+  id: string
+  name: string
+  email: string
+  avatar: string
+  bio: string
+  location: string
+  joinedYear: number
+  products: Product[]
+}

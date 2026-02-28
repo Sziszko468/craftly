@@ -2,6 +2,22 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-08-14',
   devtools: { enabled: true },
 
+  supabase: {
+  redirect: false,
+  url: 'https://mofmmhtbwprbotwizrzg.supabase.co',
+  key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vZm1taHRid3ByYm90d2l6cnpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNzA4NzEsImV4cCI6MjA4Nzg0Njg3MX0.VcrMVsPAR5mKJSaAC8U2soBZiS9lE2t3sAGZChpiC8M',
+  types: '~/types/database.types.ts',
+  },
+
+  modules: [
+    '@nuxtjs/supabase',
+  ],
+
+ 
+  components: [
+    { path: '~/components', pathPrefix: false },
+  ],
+
   css: [
     '~/assets/scss/main.scss',
   ],
@@ -40,3 +56,4 @@ export default defineNuxtConfig({
     shim: false,
   },
 })
+
