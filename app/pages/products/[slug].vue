@@ -6,6 +6,7 @@ import { useToast } from '~/composables/useToast'
 import { useLocale } from '~/composables/useLocale'
 import { useProducts } from '~/composables/useProducts'
 import type { ShopProduct } from '~/composables/useShopProducts'
+import type { LocalizedString } from '~/types'
 
 const route = useRoute()
 const { addToCart, isInCart } = useCart()
@@ -15,16 +16,13 @@ const { t, locale } = useLocale()
 const { getProductBySlug } = useProducts()
 const supabase = useSupabaseClient()
 
-// Try mock product first, then Supabase
 const mockProduct = computed(() => getProductBySlug(route.params.slug as string))
 const supabaseProduct = ref<ShopProduct | null>(null)
 const isLoading = ref(false)
 
 onMounted(async () => {
-  // If not found in mock data, fetch from Supabase by title slug
   if (!mockProduct.value) {
     isLoading.value = true
-    const slug = (route.params.slug as string).replace(/-/g, ' ')
 
     const { data, error } = await supabase
       .from('products' as never)
@@ -37,7 +35,7 @@ onMounted(async () => {
           bio
         )
       `)
-      .ilike('title', `%${slug}%`)
+      .eq('id', route.params.slug as string)
       .single()
 
     if (!error && data) {
@@ -48,7 +46,6 @@ onMounted(async () => {
   }
 })
 
-// Unified product interface
 const product = computed(() => mockProduct.value ?? supabaseProduct.value)
 
 useHead(() => ({
@@ -124,32 +121,53 @@ function handleAddToCart() {
     )
     return
   }
-  // For mock products use full Product type, for Supabase use minimal cart item
+
   if (mockProduct.value) {
     addToCart(mockProduct.value, quantity.value)
-  } else {
-    // Cast Supabase product to cart-compatible format
+  } else if (supabaseProduct.value) {
+    const sp = supabaseProduct.value
+    const title: LocalizedString = { en: sp.title, nl: sp.title }
+    const desc: LocalizedString = { en: sp.description ?? '', nl: sp.description ?? '' }
+    const bio: LocalizedString = { en: '', nl: '' }
+
     addToCart({
-      id: product.value.id,
+      id: sp.id,
       slug: route.params.slug as string,
-      title: { en: getTitle(), nl: getTitle() },
-      description: { en: getDescription(), nl: getDescription() },
-      longDescription: { en: getLongDescription(), nl: getLongDescription() },
-      price: product.value.price,
+      title,
+      description: desc,
+      longDescription: desc,
+      price: sp.price,
       currency: 'EUR',
-      images: getImages(),
-      category: { id: '0', slug: product.value.category, icon: '', label: { en: product.value.category, nl: product.value.category } },
-      creator: { id: '0', name: getCreatorName(), avatar: getCreatorAvatar(), bio: { en: '', nl: '' }, location: '', rating: 0, totalSales: 0, joinedYear: 2024, verified: false },
-      condition: product.value.condition as 'new' | 'handmade' | 'vintage',
-      tags: (product.value.tags ?? []).map((t, i) => ({ id: String(i), label: t })),
-      rating: product.value.rating,
-      reviewCount: product.value.review_count,
+      images: sp.images ?? [],
+      category: {
+        id: '0',
+        slug: sp.category,
+        icon: '',
+        label: { en: sp.category, nl: sp.category },
+      },
+      creator: {
+        id: '0',
+        name: sp.profiles?.name ?? 'Unknown',
+        avatar: sp.profiles?.avatar_url ?? `https://api.dicebear.com/7.x/initials/svg?seed=${sp.profiles?.name ?? 'U'}`,
+        bio,
+        location: sp.profiles?.location ?? '',
+        rating: 0,
+        totalSales: 0,
+        joinedYear: 2024,
+        verified: false,
+      },
+      condition: sp.condition as 'new' | 'handmade' | 'vintage',
+      tags: (sp.tags ?? []).map((tag, i) => ({ id: String(i), label: tag })),
+      rating: sp.rating,
+      reviewCount: sp.review_count,
       reviews: [],
-      stock: product.value.stock,
-      isFeatured: product.value.is_featured,
-      createdAt: product.value.created_at,
+      stock: sp.stock,
+      isFeatured: sp.is_featured,
+      isFavorited: false,
+      createdAt: sp.created_at,
     }, quantity.value)
   }
+
   success(locale.value === 'en' ? 'Added to cart!' : 'Toegevoegd aan winkelwagen!')
 }
 
@@ -161,6 +179,8 @@ function handleFavorite() {
       ? (locale.value === 'en' ? 'Added to favorites ♥' : 'Toegevoegd aan favorieten ♥')
       : (locale.value === 'en' ? 'Removed from favorites' : 'Verwijderd uit favorieten')
     )
+  } else {
+    success(locale.value === 'en' ? 'Added to favorites ♥' : 'Toegevoegd aan favorieten ♥')
   }
 }
 </script>
@@ -231,14 +251,13 @@ function handleFavorite() {
 
             <div class="product-info__top">
               <span class="product-category">{{ product.category }}</span>
-              <span v-if="product.is_featured ?? (mockProduct?.isFeatured)" class="featured-badge">
+              <span v-if="mockProduct?.isFeatured ?? (supabaseProduct?.is_featured)" class="featured-badge">
                 {{ locale === 'en' ? 'Featured' : 'Uitgelicht' }}
               </span>
             </div>
 
             <h1 class="product-title">{{ getTitle() }}</h1>
 
-            <!-- Price -->
             <div class="product-price">
               <span class="price">€{{ product.price }}</span>
               <span class="price-note">
@@ -248,7 +267,6 @@ function handleFavorite() {
 
             <p class="product-desc">{{ getDescription() }}</p>
 
-            <!-- Stock -->
             <div
               class="product-stock"
               :class="{ 'product-stock--low': product.stock <= 2 }"
@@ -265,7 +283,6 @@ function handleFavorite() {
               </span>
             </div>
 
-            <!-- Quantity + Add to cart -->
             <div class="product-actions">
               <div class="qty-input">
                 <button
@@ -294,7 +311,6 @@ function handleFavorite() {
               </button>
             </div>
 
-            <!-- Tags -->
             <div v-if="(product.tags ?? mockProduct?.tags)?.length" class="product-tags">
               <span
                 v-for="(tag, i) in (mockProduct ? mockProduct.tags.map(t => t.label) : product.tags ?? [])"
@@ -305,7 +321,6 @@ function handleFavorite() {
               </span>
             </div>
 
-            <!-- Creator -->
             <div class="creator-card">
               <img
                 :src="getCreatorAvatar()"

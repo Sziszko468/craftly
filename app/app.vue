@@ -18,7 +18,7 @@
           <NuxtLink to="/profile">Profile</NuxtLink>
           <NuxtLink to="/cart">Cart</NuxtLink>
         </nav>
-        <p class="footer__copy">© 2025 Craftly. Handmade with ♥</p>
+        <p class="footer__copy">© 2025 Craftly.</p>
       </div>
     </footer>
     <AppToast />

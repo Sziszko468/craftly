@@ -2,7 +2,7 @@
 import { onMounted } from 'vue'
 import { useShopProducts } from '~/composables/useShopProducts'
 import { useLocale } from '~/composables/useLocale'
-import { PRODUCTS, CATEGORIES } from '~/data/products'
+import { CATEGORIES } from '~/data/products'
 
 useHead({ title: 'Shop – Craftly' })
 
@@ -32,7 +32,6 @@ const sortOptions = [
   { value: 'price-desc', label: { en: 'Price: High to Low', nl: 'Prijs: Hoog → Laag' } },
 ]
 
-// Combine mock + real categories
 const allCategories = CATEGORIES
 </script>
 
@@ -53,7 +52,6 @@ const allCategories = CATEGORIES
 
       <!-- Toolbar -->
       <div class="toolbar animate-fade-up stagger-2">
-        <!-- Search -->
         <div class="search-wrap">
           <svg class="search-wrap__icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <circle cx="11" cy="11" r="8"/>
@@ -67,7 +65,6 @@ const allCategories = CATEGORIES
           />
         </div>
 
-        <!-- Sort -->
         <select v-model="selectedSort" class="sort-select">
           <option v-for="opt in sortOptions" :key="opt.value" :value="opt.value">
             {{ locale === 'en' ? opt.label.en : opt.label.nl }}
@@ -107,6 +104,7 @@ const allCategories = CATEGORIES
           :key="product.id"
           class="shop-card animate-fade-up"
           :class="`stagger-${(i % 6) + 1}`"
+          @click="navigateTo(`/products/${product.id}`)"
         >
           <!-- Image -->
           <div class="shop-card__image-wrap">
@@ -197,7 +195,6 @@ const allCategories = CATEGORIES
   margin-top: $space-2;
 }
 
-// Toolbar
 .toolbar {
   display: flex;
   gap: $space-4;
@@ -252,7 +249,6 @@ const allCategories = CATEGORIES
   &:focus { outline: none; border-color: $color-blue; }
 }
 
-// Categories
 .categories {
   display: flex;
   flex-wrap: wrap;
@@ -281,7 +277,6 @@ const allCategories = CATEGORIES
   }
 }
 
-// Loading
 .loading-state {
   display: flex;
   justify-content: center;
@@ -299,7 +294,6 @@ const allCategories = CATEGORIES
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-// Products grid
 .products-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -309,7 +303,6 @@ const allCategories = CATEGORIES
   @media (max-width: 640px)  { grid-template-columns: 1fr; }
 }
 
-// Shop card
 .shop-card {
   background: $color-surface;
   border: 1px solid $color-border;
@@ -432,7 +425,6 @@ const allCategories = CATEGORIES
   }
 }
 
-// Empty state
 .empty-state {
   display: flex;
   flex-direction: column;
