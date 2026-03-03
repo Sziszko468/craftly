@@ -10,9 +10,9 @@ const isMenuOpen = ref(false)
 const isScrolled = ref(false)
 
 const navLinks = [
-  { label: { en: 'Shop',    nl: 'Winkel'      }, to: '/products' },
-  { label: { en: 'Profile', nl: 'Profiel'     }, to: '/profile'  },
-  { label: { en: 'Login',   nl: 'Inloggen'    }, to: '/auth'     },
+  { label: { en: 'Shop',    nl: 'Winkel'  }, to: '/products' },
+  { label: { en: 'Profile', nl: 'Profiel' }, to: '/profile'  },
+  { label: { en: 'Login',   nl: 'Inloggen'}, to: '/auth'     },
 ]
 
 onMounted(() => {
@@ -20,10 +20,15 @@ onMounted(() => {
     isScrolled.value = window.scrollY > 20
   }, { passive: true })
 })
+
+const router = useRouter()
+watch(() => router.currentRoute.value.path, () => {
+  isMenuOpen.value = false
+})
 </script>
 
 <template>
-  <header class="header" :class="{ 'header--scrolled': isScrolled }">
+  <header class="header" :class="{ 'header--scrolled': isScrolled, 'header--menu-open': isMenuOpen }">
     <div class="container header__inner">
 
       <!-- Logo -->
@@ -54,17 +59,13 @@ onMounted(() => {
             class="lang-btn"
             :class="{ 'lang-btn--active': locale === 'en' }"
             @click="setLocale('en')"
-          >
-            EN
-          </button>
+          >EN</button>
           <span class="lang-sep">|</span>
           <button
             class="lang-btn"
             :class="{ 'lang-btn--active': locale === 'nl' }"
             @click="setLocale('nl')"
-          >
-            NL
-          </button>
+          >NL</button>
         </div>
 
         <!-- Cart icon -->
@@ -83,9 +84,14 @@ onMounted(() => {
         <button
           class="menu-btn"
           :aria-expanded="isMenuOpen"
+          aria-label="Toggle menu"
           @click="isMenuOpen = !isMenuOpen"
         >
-          <span class="menu-btn__bar" :class="{ 'menu-btn__bar--open': isMenuOpen }" />
+          <span class="menu-btn__icon">
+            <span class="bar bar--top" />
+            <span class="bar bar--mid" />
+            <span class="bar bar--bot" />
+          </span>
         </button>
 
       </div>
@@ -93,7 +99,7 @@ onMounted(() => {
 
     <!-- Mobile nav -->
     <Transition name="mobile-nav">
-      <div v-if="isMenuOpen" class="mobile-nav">
+      <nav v-if="isMenuOpen" class="mobile-nav">
         <NuxtLink
           v-for="link in navLinks"
           :key="link.to"
@@ -103,7 +109,22 @@ onMounted(() => {
         >
           {{ locale === 'en' ? link.label.en : link.label.nl }}
         </NuxtLink>
-      </div>
+
+        <!-- Language toggle mobile -->
+        <div class="mobile-nav__lang">
+          <button
+            class="lang-btn"
+            :class="{ 'lang-btn--active': locale === 'en' }"
+            @click="setLocale('en')"
+          >EN</button>
+          <span class="lang-sep">|</span>
+          <button
+            class="lang-btn"
+            :class="{ 'lang-btn--active': locale === 'nl' }"
+            @click="setLocale('nl')"
+          >NL</button>
+        </div>
+      </nav>
     </Transition>
   </header>
 </template>
@@ -117,27 +138,34 @@ onMounted(() => {
   z-index: 100;
   height: $nav-height;
   display: flex;
-  align-items: center;
-  transition: background $duration-base $ease-out, border-color $duration-base;
-  border-bottom: 1px solid transparent;
+  flex-direction: column;
+  justify-content: center;
+  background: rgba($color-bg, 0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid $color-border;
+  transition: box-shadow $duration-base $ease-out;
 
   &--scrolled {
-    background: rgba($color-bg, 0.85);
-    backdrop-filter: blur(20px);
-    border-color: $color-border;
+    box-shadow: $shadow-sm;
+  }
+
+  &--menu-open {
+    height: auto;
   }
 
   &__inner {
+    height: $nav-height;
     display: flex;
     align-items: center;
     gap: $space-8;
+    flex-shrink: 0;
   }
 
   &__actions {
     margin-left: auto;
     display: flex;
     align-items: center;
-    gap: $space-4;
+    gap: $space-3;
   }
 }
 
@@ -147,6 +175,7 @@ onMounted(() => {
   align-items: center;
   gap: $space-2;
   flex-shrink: 0;
+  text-decoration: none;
 
   &__icon {
     font-size: $text-lg;
@@ -165,7 +194,7 @@ onMounted(() => {
   }
 }
 
-// Nav
+// Desktop nav
 .nav {
   display: flex;
   gap: $space-6;
@@ -179,6 +208,7 @@ onMounted(() => {
     letter-spacing: 0.02em;
     transition: color $duration-fast;
     position: relative;
+    text-decoration: none;
 
     &::after {
       content: '';
@@ -209,6 +239,8 @@ onMounted(() => {
   border: 1px solid $color-border;
   border-radius: $radius-full;
   padding: $space-1 $space-3;
+
+  @media (max-width: 768px) { display: none; }
 }
 
 .lang-btn {
@@ -218,9 +250,10 @@ onMounted(() => {
   color: $color-text-dim;
   transition: color $duration-fast;
   padding: 2px $space-1;
+  cursor: pointer;
 
   &--active { color: $color-blue; }
-  &:hover:not(&--active) { color: $color-text-muted; }
+  &:hover:not(.lang-btn--active) { color: $color-text-muted; }
 }
 
 .lang-sep {
@@ -239,10 +272,11 @@ onMounted(() => {
   border-radius: $radius-full;
   color: $color-text-muted;
   transition: color $duration-fast, background $duration-fast;
+  text-decoration: none;
 
   &:hover {
     color: $color-text;
-    background: $color-surface;
+    background: $color-surface-2;
   }
 
   &__badge {
@@ -260,7 +294,6 @@ onMounted(() => {
     align-items: center;
     justify-content: center;
     padding: 0 $space-1;
-    animation: fade-in $duration-base $ease-out;
   }
 }
 
@@ -271,62 +304,81 @@ onMounted(() => {
   height: 40px;
   align-items: center;
   justify-content: center;
+  border-radius: $radius-md;
+  transition: background $duration-fast;
+  cursor: pointer;
+
+  &:hover { background: $color-surface-2; }
 
   @media (max-width: 768px) { display: flex; }
+}
 
-  &__bar {
-    position: relative;
-    width: 22px;
-    height: 2px;
-    background: $color-text;
-    border-radius: 2px;
-    transition: background $duration-fast;
+.menu-btn__icon {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 22px;
+}
 
-    &::before, &::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: currentColor;
-      border-radius: 2px;
-      transition: transform $duration-base $ease-out;
+.bar {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: $color-text;
+  border-radius: 2px;
+  transition: transform $duration-base $ease-out, opacity $duration-base;
+
+  .header--menu-open & {
+    &--top {
+      transform: translateY(7px) rotate(45deg);
     }
-
-    &::before { top: -7px; }
-    &::after  { top:  7px; }
-
-    &--open {
-      background: transparent;
-      &::before { transform: rotate(45deg) translate(5px, 5px); }
-      &::after  { transform: rotate(-45deg) translate(5px, -5px); }
+    &--mid {
+      opacity: 0;
+      transform: scaleX(0);
+    }
+    &--bot {
+      transform: translateY(-7px) rotate(-45deg);
     }
   }
 }
 
 // Mobile nav
 .mobile-nav {
-  position: absolute;
-  top: $nav-height;
-  left: 0;
-  right: 0;
   background: $color-surface;
-  border-bottom: 1px solid $color-border;
-  padding: $space-4;
+  border-top: 1px solid $color-border;
+  padding: $space-3 $space-4 $space-4;
   display: flex;
   flex-direction: column;
   gap: $space-1;
+
+  @media (min-width: 769px) { display: none; }
 
   &__link {
     padding: $space-3 $space-4;
     border-radius: $radius-md;
     font-size: $text-md;
+    font-weight: 500;
     color: $color-text-muted;
     transition: color $duration-fast, background $duration-fast;
+    text-decoration: none;
 
     &:hover {
       color: $color-text;
       background: $color-surface-2;
+    }
+  }
+
+  &__lang {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-3 $space-4;
+    margin-top: $space-2;
+    border-top: 1px solid $color-border;
+
+    .lang-btn {
+      font-size: $text-sm;
+      padding: $space-1 $space-2;
     }
   }
 }
@@ -334,6 +386,7 @@ onMounted(() => {
 .mobile-nav-enter-active,
 .mobile-nav-leave-active {
   transition: opacity $duration-base $ease-out, transform $duration-base $ease-out;
+  overflow: hidden;
 }
 .mobile-nav-enter-from,
 .mobile-nav-leave-to {
